@@ -1,0 +1,353 @@
+Tour of Heroes tutorial:
+
+Visual Studio 2019 setup:
+
+You can create a Visual Studio solution and create an ASP.NET Core Web application that uses the .NET Core.  You can run Angular inside of Visual Studio now.
+
+You can add your solution to the git repository by first initializing the new repo and using the following at the command prompt:
+
+git init
+
+git remote add origin git@github.com/keenanstewart/keenSTEM
+
+The command prompt using git is more informative than using Team Explorer in Visual Studio.
+
+You can go into Branches in Team Explorer to view the branches you created to see what is in and what is being tracked for each branch.
+
+https://www.talkingdotnet.com/create-an-angular-8-app-with-visual-studio-2019/
+
+To run a nuget package restore, run the following from the command line or package manager?:
+
+Tools, NuGet Package Manager, Package Manager Settings.  Click on General under NuGet Package Manager and both options under Package Restore should be checked.
+
+You can run the following command at the command prompt to restore any packages indicated in the .csproj file:
+
+dotnet restore
+
+You can use command line to commit the changes:
+
+git init
+git add .
+git commit -m "first commit"
+git remote add origin git@github.com:keenanstewart/keenMVCAngularSolution.git
+git push -u origin master
+
+
+Issues connecting to git:
+
+Try to ssh to connect to your repository.  The example uses ssh, so you can use putty or just at the command prompt where you perform git commands.
+
+Test connection
+
+ssh –T keenanstewart@github.com
+
+Permission denied (public key)
+
+ssh-add –l –E md5
+
+check to see if agent is running :
+
+ssh-add –l
+
+If you receive an unable to start ssh-agent service, error 1058, ensure the OpenSSH Authentication agent is enabled in Windows services.
+
+To generate a public/private key pair, you will need to go to your .ssh directory and run the following command (c:\Users\keenan.stewart\.ssh)
+
+ssh-keygen
+
+Name your RSA key pair by pressing enter to save it as default name
+
+Copy it to your clip board to provide to github:
+
+clip < id_rsa.pub
+
+Open github.com 
+
+
+Tutorial on:
+
+https://angular.io/guide/setup-local
+
+Node version
+
+Brings back the current version of node installed:
+
+node -v
+
+Create a new ng app:
+
+ng new keenSTEM
+
+Start app once it is created:
+
+ng serve --open
+
+
+Debugging site:
+
+http://localhost:4200/
+
+NG Serve it up:
+
+cd c:\Work\Projects\Angular\keenSTEM\keenSTEM
+
+ng serve –open
+
+http://localhost:4200/dashboard
+
+
+Type Script errors:
+
+
+
+  "compileOnSave": false,
+  "compilerOptions": {
+    "experimentalDecorators": true,
+    "baseUrl": "./"
+  }
+
+Neat code
+
+Dashboard component
+When setting up navigation to a new with an object to display, such as login or heroes, it will only display is there is something in that object so you do not need to test for value in an object as this is handled automatically.
+
+You can remove dead code that is no longer used, but I sometimes leave this code in for review or at least document or check in your changes so you could revert if necessary.
+
+Adding imports to hero-detail.component.ts
+
+@angular/router contains an ActivatedRoute to help you keep track of your breadcrumbs
+
+Location is an angular service for interacting with the browser.
+
+
+Need to get HeroComponent and LoginComponent synced.
+
+Left off here, about to synch LoginComponent:
+
+https://angular.io/tutorial/toh-pt5
+
+
+
+
+Got files synced, about to proceed:
+
+When initializing a class variable, such as a custom Message, you will need to use let (not var):
+
+let messageToLog: Message = {
+	callingPage: “HeroDetailComponent,
+	message: message,
+};
+
+
+Can’t get laptop to sync with TFS/GitHub in Team Explorer.  May need to explore that tomorrow.
+
+
+Was able to commit locally, place to start off tomorrow up in Visual Studio.
+
+InMemoryDataService can be used to simulate a database without needing to connect to an actual data store.  When accessing the InMemoryDataService, you use syntax as follows:
+
+api/heroes
+api/logins
+
+All classes need an id created, it will not work with loginId.
+
+To create an in memory database, you will need to update the genId with the table name, such as:
+
+
+Partial <T>
+
+There are times when creating a new object, you may not know the required new id for the new object. You can use the Partial<T> to only provide the name of the hero and the genId will be used to number the next available ID to use.  I had to update the AddHero in the hero.service.ts file to use a partial hero as follows:
+
+<code>
+
+  /** POST: add a new hero to the server */
+  addHero(hero: Partial<Hero>): Observable<Hero> {
+    // TODO: logic in adding heroName
+    this.log(`In addHero: heroeName is: ${hero.name}`);
+    
+    return this.http.post<Hero>(this.heroesUrl, hero, this.httpOptions).pipe(
+      tap((newHero: Hero) =>
+        this.log(`added hero with string id=${newHero.id}`)),
+      catchError(this.handleError<Hero>("Error in addHero")));
+  }
+
+</code>
+
+
+I also updated the heroes.component.ts to call the heroService.ts as follows:
+
+<code>
+
+  addHero(hero: string): void {
+    this.log(`In addHero of HeroesComponent, name is: ${hero}`);
+    //hero.name = hero.name.trim();
+
+    if (!hero)
+    {
+      this.log(`In if(!hero.name) of add hero: ${hero}`);
+      return;
+    }
+
+    this.heroService.addHero({ name: hero } as Partial<Hero>)
+      .subscribe(hero => {
+        this.heroes.push(hero);
+      });
+  }
+
+</code>
+
+
+
+subscribe
+
+If you do not subscribe to the service as seen in the code above, the service will not send the request to the server.  As a rule, an Observable does not do anything until something subscribes to the service.
+
+
+ng statements
+
+When using ngFor with observables, use the dollar sign ($) to indicate you are using an Observable, and not an array, such as:
+
+<li *ngFor=”let hero of heroes$ | async”>
+
+You will need to use the | async so that the statement will subscribe to the Observable automatically so the subscription will not need to be completed in the component class.  For Observables, you can use the ngOnInit method to set any needed variables.  For a search, you can set a searchTerm private Subject<string>(); and put the search term in a Observable stream.
+
+  // Push a search term into the Observable stream.
+  searchHero(term: string): void {
+    this.log("In searchHero");
+    this.searchTerms.next(term);
+  }
+
+A Subject is both a source of observable values and an Observable itself. You can subscribe to a Subject as you would any Observable.
+
+You can also push values into that Observable by calling its next(value) method as the search() method does.
+
+The event binding to the textbox input event calls the searchHeroes method:
+
+<input #heroSearchBox id="hero-search-box" (input)="heroSearch(heroSearchBox.value)" />
+
+Every time the user types in the textbox, the binding calls search() with the textbox value, a "search term". The searchTerms becomes an Observable emitting a steady stream of search terms.
+
+The searchTerms simply takes the searchTerms and emitting an Observable steady stream of search terms.
+
+Injections:
+
+You can inject a class, such as a service into the constructor or the appropriate component by the following steps:
+
+1. Import the services, such as a MessageService
+a. import { MessageService } from "../services/message.service"; 
+2. and then inject the required services being used:
+a. constructor(messageService: MessageService) { }
+3. You can now use this message service to log any notifications by creating a method and passing it the appropriate message.  I customized my message service to take an argument of the calling page so I can debug it easier.  Here is the code I used:
+a. I might be able to add the log method to the message service
+
+
+
+Left off here:
+
+Open Visual Studio on second monitor as well as this document to continue the Angular course at the following section:  Trying to get LoginService to recognize I changed the code in the this.log file, needed to restart.
+
+https://angular.io/tutorial/toh-pt6#heroescomponent
+
+
+
+Bring up the test site:
+
+
+
+
+
+
+
+
+RESTful APIs
+
+
+
+Angular concepts:
+
+Angular is a platform and framework for building single-page client applications using HTML and TypeScript.  Angular contains core and optional functionality you can optionally import into your apps.
+
+The basic building blocks of Angular is NgModules. NgModules contain related code into functional sets.  Simply put, an Angular app is defined by NgModules with at least a root module that enables bootstrapping, and typically contains more feature modules.  
+
+Components view and services
+
+Components defines views that are used to modify your program logic and data and components use services that can be injected into components as dependencies, making your code modular, reusable, and efficient.
+
+Modules, components, and services are classes that use decorators.  These decorators mark their type that allows Angular to read the metadata associated with these decorators on how they can be used.
+
+- The metadata for a component class associates it with a template that defines a view.  This template combines ordinary HTML with Angular directives and binding markup that allows Angular to modify the HTML before rendering it for display
+- The metadata for a service class provides the information Angular needs to make it available to components through dependency Injection (DI)
+
+To navigate between views in an Angular app, Angular provides the Router service to help you define navigational paths among views.  This router provides sophisticated in-browser navigational capabilities.
+
+
+Modules
+
+Angular NgModules differ from and complement JavaScript (ES2015) modules.  An NgModule declares a compilation context for a set of components that is declared to an application domain, a workflow, or a closely related set of capabilities.  An NgModule can associate its components with related code, such as services, to form functional units.
+
+Every Angular app contains a root module, conventionally called AppModule, which provides the bootstrap mechanism that launches the application.  An app typically contains many function modules.
+
+You can import and export NgModules into other NgModules to extend and use services in other NgModules.  For example, to use the router services in your app, you import the Router NgModule.
+
+NgModules allow lazy loading, which is loading modules on demand to minimize the code loaded during startup.  This is accomplished by organizing code into distinct functional modules to help manage the development of complex applications, and in designing for reusability.
+
+
+Introduction to modules
+
+https://angular.io/guide/architecture-modules
+
+
+Components 
+
+Each Angular application will have at least one component, the root component, that connects a component hierarchy with the page document object module (DOM).  Each component defines a class that contains application data and logic, and is associated with an HTML template that defines the view to be displayed in the target environment.
+
+The @Component() decorator identifies the class immediately below it as a component, and provides the template and related component-specific metadata.
+
+Decorators are functions that modify JavaScript classes.  Angular defines a number of decorators that attach specific kinds of metadata to classes, so that the system knows what those classes mean and how they should work.
+
+Angular Glossary
+
+ahead-of-time (AOT) compilation
+
+During the build phase, the Angular ahead-of-time (AOT) compiler converts Angular HTML and TypeScript code into efficient JavaScript code before the browser downloads and runs that code.  This is the best compilation mode for production environments, with decreased load time and increased performance compared to just-in-time (JIT) compilation.  By compiling your application using ngc command line tool, you can bootstrap directly into a module factory, so you don’t need to include the Angular compiler in your JavaScript bundle.
+
+
+Angular element
+
+An Angular component packaged as a custom element.
+
+
+// TODO: define other Angular glossary terms
+
+
+
+Zone
+
+A zone is an execution context for a set of asynchronous tasks and is useful for debugging, profiling, and testing apps that include asynchronous operations, such as event processing, promises, and calls to remote servers.  An Angular app runs in a zone where it can respond to asynchronous events by checking for data changes and updating the information it displays by resolving data bindings.  A zone client can take action before and after an async operation completes.
+
+
+Errors encountered:
+
+Property id is missing.  This message is from the in-memory-data.service.ts file:
+
+Adding to this discussion, I had to use Partial as it kept on saying I was missing an id when completing the Tour of Heroes Lesson 06. I used the message service to see how far the code went before it stopped working, so you can ignore the this.log lines, but you can add them to your own project to help with debugging. First, I updated the addHero as follows:
+addHero(hero: string): void { this.log(`In addHero of HeroesComponent, name is: ${hero}`); 
+if (!hero)
+{
+  this.log(`In if(!hero.name) of add hero: ${hero}`);
+  return;
+}
+
+this.heroService.addHero({ name: hero } as Partial<Hero>)
+  .subscribe(hero => {
+    this.heroes.push(hero);
+  });
+} 
+And then I updated the heroes.service.ts file to use the partial hero and allow the code to generate its own id from the in-memory-data.service.ts:
+addHero(hero: Partial): Observable { this.log(`In addHero: heroeName is: ${hero.name}`); return this.http.post(this.heroesUrl, hero, this.httpOptions).pipe( tap((newHero: Hero) => this.log(`added hero with string id=${newHero.id}`)), catchError(this.handleError("Error in addHero"))); } 
+As far as I can see, it is now working as expected. There may be some more code to update, but this should help anyone with the following error message:
+ERROR in src/app/heroes/heroes.component.ts:52:30 - error TS2352: Conversion of type '{ name: never; }' to type 'Hero' may be a mistake because neither type sufficiently overlaps with the other. If this was intentional, convert the expression to 'unknown' first. Property 'id' is missing in type '{ name: never; }' but required in type 'Hero'.
+
+
+
+
